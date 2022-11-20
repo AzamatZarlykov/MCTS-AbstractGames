@@ -13,15 +13,17 @@ namespace Strategies
     {
         int visitCount;
         int winScore;
+        int lastAction = -1;    // last action (best move chosen to return)
         TicTacToe? game;
         Node? parent;
         List<Node> childArray = new List<Node>();
 
         public Node() { }
-        public Node(TicTacToe game, Node parent)
+        public Node(TicTacToe game, Node parent, int action)
         {
             this.game = game;
             this.parent = parent;
+            this.lastAction = action;
         }
 
         public Node Clone()
@@ -42,11 +44,12 @@ namespace Strategies
 
         public Node GetRandomChildNode(Random random)
         {
-            /*           int r = random.Next(childArray.Count);
-                       Node n = childArray[r];
-                       childArray.RemoveAt(r);
-                       return n;*/
             return childArray[random.Next(childArray.Count)];
+        }
+
+        public int GetLastAction()
+        {
+            return this.lastAction;
         }
 
         public void IncrementVisit()
@@ -141,10 +144,17 @@ namespace Strategies
         // Expansion: grow the search tree by generating new children (possible states)
         private void ExpandNode(Node promisingNode)
         {
-            List<TicTacToe> possibleStates = promisingNode.GetGame().GetAllPossibleStates();
-            foreach (TicTacToe state in possibleStates)
+            TicTacToe gameState = promisingNode.GetGame();
+
+            List<int> possibleActions = gameState.GetAllActions();
+            List<TicTacToe> possibleStates = gameState.GetAllPossibleStates(possibleActions);
+
+            for(int i = 0; i < possibleActions.Count; i++)
             {
-                Node newNode = new Node(state, promisingNode);
+                int action = possibleActions[i];
+                TicTacToe state = possibleStates[i];
+
+                Node newNode = new Node(state, promisingNode, action);
                 promisingNode.GetChildArray().Add(newNode);
             }
         }
@@ -165,13 +175,13 @@ namespace Strategies
         }
 
         // Backpropogation
-        private void Backpropogation(Node nodeToExplore, int playerNo)
+        private void Backpropogation(Node nodeToExplore, int playoutResult)
         {
             Node tempNode = nodeToExplore;
             while (tempNode != null)
             {
                 tempNode.IncrementVisit();
-                if (tempNode.GetGame().turn == playerNo)
+                if (tempNode.GetGame().turn == playoutResult)
                 {
                     tempNode.AddScore(WINSCORE);
                 }
@@ -210,7 +220,7 @@ namespace Strategies
             }
             Node winnerNode = rootNode.GetChildWithMaxScore();
             tree.SetRoot(winnerNode);
-            return winnerNode.getState().getBoard();
+            return winnerNode.GetLastAction();
         }
     }
 }

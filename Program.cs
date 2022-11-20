@@ -14,11 +14,14 @@ namespace Search
 
     class Controller
     {
+        private int draws;
+        private int[] gamesWon;
+
         List<Strategy> strategies = new List<Strategy>();
 
         public Controller()
         {
-
+            gamesWon = new int[2];
         }
 
 
@@ -30,7 +33,7 @@ namespace Search
             switch (name)
             {
                 case "basic":
-                    return new BasicStrategy();
+                    return new BasicStrategy(seed);
                 case "mcts":
                     int limit = int.Parse(type_param[1]);
                     return new MCTS(seed, limit);
@@ -47,6 +50,38 @@ namespace Search
             }
         }
 
+        private void HandleEndGameResults(TicTacToe game)
+        {
+            int result = game.Winner();
+
+            if (result == 0)
+            {
+                draws++;
+                return;
+            }
+            result = result == 1 ? 0 : 1;
+            gamesWon[result]++;
+        }
+
+        private void DisplayWinRate(GameParameters p)
+        {
+            Console.WriteLine($"Draw rate: {(100 * (double)draws / p.TotalGames):f1}%");
+            for (int i = 0; i < 2; ++i)
+                Console.WriteLine($"Strategy {i + 1} ({p.Strategies[i]}) won " +
+                    $"{gamesWon[i]} / {p.TotalGames} games " +
+                    $"({(100 * (double)gamesWon[i] / p.TotalGames):f1}%)");
+
+            Console.WriteLine();
+        }
+
+        private void PrintStats(GameParameters parameters)
+        {
+            Console.WriteLine("==== STATISTICS ====");
+            Console.WriteLine($"Total Games Played: {parameters.TotalGames}");
+
+            DisplayWinRate(parameters);
+        }
+
         public void Run(GameParameters parameters)
         {
             Console.WriteLine("==== RUNNING ====\n");
@@ -58,25 +93,17 @@ namespace Search
                 while (!game.IsDone())
                 {
                     int turn = game.turn;
+                    Console.WriteLine($"Turn: {turn}");
+                    int action = strategies[turn - 1].Action(game);
+                    Console.WriteLine($"Action: X: {action % 3}; Y: {action / 3}");
+                    game.Move(action);
+
+                    Console.WriteLine(game);
                 }
-
-                /*                game.Initialize(i, gParam.Agents);
-                                InitializeAgents(i);
-
-                                while (game.gameStatus == GameStatus.GameInProcess)
-                                {
-                                    int turn = game.GetTurn();
-
-                                    totalMoves[turn]++;
-                                    timers[turn].Start();
-
-                                    var gw = new GameView(game, turn);
-                                    Card? card = agents[turn].Move(gw);
-                                    game.Move(card);
-                                    timers[turn].Stop();
-                                }
-                                HandleEndGameResult(game, i);*/
+                HandleEndGameResults(game);
             }
+            PrintStats(parameters);
+            Console.WriteLine("==== FINISHED ====");
         }
     }
 

@@ -5,8 +5,11 @@ namespace Strategies
 {
     public class BasicStrategy : Strategy
     {
-        private Random random = new Random(0);
-        public BasicStrategy() { }
+        private Random random;
+        public BasicStrategy(int seed)
+        {
+            this.random = new Random(seed);
+        }
 
         public int Action(TicTacToe s)
         {

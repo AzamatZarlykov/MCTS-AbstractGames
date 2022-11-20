@@ -33,21 +33,19 @@ namespace Game
             }
         }
 
-        public TicTacToe(int[][] b)
-        {
-            for (int i = 0; i < 3; ++i)
-            {
-                board[i] = b == null ? new int[3] : b[i];
-            }
-        }
-
         public TicTacToe Clone()
         {
-            TicTacToe t = new TicTacToe(board);
+            //TicTacToe t = new TicTacToe(board);
+            TicTacToe t = new TicTacToe();
 
-            t.turn = turn;
             t.moves = moves;
+            t.turn = turn;
             t.winner = winner;
+
+            for (int i = 0; i < 3; ++i)
+            {
+                t.board[i] = (int[])board[i].Clone();
+            }
 
             return t;
         }
@@ -167,9 +165,8 @@ namespace Game
             return sb.ToString();
         }
 
-        public List<TicTacToe> GetAllPossibleStates()
+        public List<TicTacToe> GetAllPossibleStates(List<int> possibleActions)
         {
-            List<int> possibleActions = GetAllActions();
             List<TicTacToe> result = new List<TicTacToe>();
 
             foreach (int action in possibleActions)
