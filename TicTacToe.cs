@@ -25,7 +25,13 @@ namespace Game
         int winner = -1;
         int win_x, win_y, win_dx, win_dy;
         // constructors
-        public TicTacToe() { }
+        public TicTacToe() 
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                board[i] = new int[3];
+            }
+        }
 
         public TicTacToe(int[][] b)
         {

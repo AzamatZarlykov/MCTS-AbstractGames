@@ -9,7 +9,7 @@ namespace PolicyEvaluation
         {
             if (nodeVisit == 0)
             {
-                return Int32.MaxValue;
+                return int.MaxValue;
             }
             return ((double)nodeWinScore / (double)nodeVisit)
                 + 1.41 * Math.Sqrt(Math.Log(parentVisit) / (double)nodeVisit);

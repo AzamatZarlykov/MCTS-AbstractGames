@@ -18,23 +18,35 @@ namespace Strategies
         List<Node> childArray = new List<Node>();
 
         public Node() { }
-
-        public Node(Node node)
-        {
-            visitCount = node.visitCount;
-            winScore = node.winScore;
-            game = node.game;
-            parent = node.parent;
-        }
         public Node(TicTacToe game, Node parent)
         {
             this.game = game;
             this.parent = parent;
         }
 
-        public Node GetRandomChildNode(int seed)
+        public Node Clone()
         {
-            return childArray[new Random(seed).Next(childArray.Count)];
+            Node clone = (Node)this.MemberwiseClone();
+
+            clone.game = game!.Clone();
+            clone.parent = parent is not null ? parent.Clone() : null;
+            clone.childArray = new List<Node>(childArray);
+
+            return clone;
+        }
+        
+        public Node GetChildWithMaxScore()
+        {
+            return childArray.MaxBy(child => child.winScore)!;
+        }
+
+        public Node GetRandomChildNode(Random random)
+        {
+            /*           int r = random.Next(childArray.Count);
+                       Node n = childArray[r];
+                       childArray.RemoveAt(r);
+                       return n;*/
+            return childArray[random.Next(childArray.Count)];
         }
 
         public void IncrementVisit()
@@ -80,8 +92,11 @@ namespace Strategies
 
     class Tree
     {
-        Node? root;
-        public Tree() { }
+        Node root;
+        public Tree() 
+        { 
+            root = new Node();
+        }
 
         public Tree(Node root)
         {
@@ -92,21 +107,24 @@ namespace Strategies
         {
             return root!;
         }
+
+        public void SetRoot(Node node)
+        {
+            this.root = node;
+        }
     }
 
     class MCTS : Strategy
     {
-        AbstractGame game;
-        Strategy strategy;
         int limit;
+        Random random;
 
         const int WINSCORE = 10;
 
-        public MCTS(AbstractGame game, Strategy baseO, int limit)
+        public MCTS(int seed, int limit)
         {
             this.limit = limit;
-            this.game = game;
-            this.strategy = baseO;
+            this.random = new Random(seed);
         }
 
         // Selection: guided by selection policy - UCT
@@ -134,10 +152,18 @@ namespace Strategies
         // Simulation
         private int SimulateRandomPlayout(Node nodeToExplore)
         {
-
+            Node tempNode = nodeToExplore.Clone();
+            TicTacToe gameState = tempNode.GetGame();
+            
+            while(!gameState.IsDone())
+            {
+                
+                int action = gameState.RandomAction(random); 
+                gameState.Move(action);
+            }
+            return gameState.Winner();
         }
 
-        // backpropagation
         // Backpropogation
         private void Backpropogation(Node nodeToExplore, int playerNo)
         {
@@ -165,22 +191,26 @@ namespace Strategies
             int curr = 1;
             while (curr <= limit)
             {
+                // Selection
                 Node promisingNode = SelectPromisingNode(rootNode);
-                if (promisingNode.GetGame().Winner() == -1)
-                {
-                    ExpandNode(promisingNode);
-                }
+                // Expansion
+                ExpandNode(promisingNode);
+                
                 Node nodeToExplore = promisingNode;
                 if (promisingNode.GetChildArray().Count > 0)
                 {
-                    nodeToExplore = promisingNode.GetRandomChildNode(curr);
+                    nodeToExplore = promisingNode.GetRandomChildNode(random);
                 }
+                // Simulation
                 int playoutResult = SimulateRandomPlayout(nodeToExplore);
+                // Backpropogation
                 Backpropogation(nodeToExplore, playoutResult);
-
+                
                 curr++;
             }
-            return 0;
+            Node winnerNode = rootNode.GetChildWithMaxScore();
+            tree.SetRoot(winnerNode);
+            return winnerNode.getState().getBoard();
         }
     }
 }
