@@ -50,16 +50,20 @@ namespace Search
             }
         }
 
-        private void HandleEndGameResults(TicTacToe game)
+        private void HandleEndGameResults(TicTacToe game, string[] strategies, int gameIndex)
         {
+            Console.Write("Game " + gameIndex + ": ");
+
             int result = game.Winner();
 
             if (result == 0)
             {
+                Console.WriteLine("Draw");
                 draws++;
                 return;
             }
             result = result == 1 ? 0 : 1;
+            Console.WriteLine($"Strategy {result + 1} ({strategies[result]}) won");
             gamesWon[result]++;
         }
 
@@ -76,7 +80,7 @@ namespace Search
 
         private void PrintStats(GameParameters parameters)
         {
-            Console.WriteLine("==== STATISTICS ====");
+            Console.WriteLine("\n==== STATISTICS ====\n");
             Console.WriteLine($"Total Games Played: {parameters.TotalGames}");
 
             DisplayWinRate(parameters);
@@ -93,14 +97,14 @@ namespace Search
                 while (!game.IsDone())
                 {
                     int turn = game.turn;
-                    Console.WriteLine($"Turn: {turn}");
+                    // Console.WriteLine($"Turn: {turn}");
                     int action = strategies[turn - 1].Action(game);
-                    Console.WriteLine($"Action: X: {action % 3}; Y: {action / 3}");
+                    // Console.WriteLine($"Action: X: {action % 3}; Y: {action / 3}");
                     game.Move(action);
 
-                    Console.WriteLine(game);
+                    // Console.WriteLine(game);
                 }
-                HandleEndGameResults(game);
+                HandleEndGameResults(game, parameters.Strategies, i);
             }
             PrintStats(parameters);
             Console.WriteLine("==== FINISHED ====");
