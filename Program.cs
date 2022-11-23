@@ -1,5 +1,5 @@
 ﻿using System;
-using Game;
+using Games;
 using Strategies;
 
 namespace Search
@@ -18,7 +18,7 @@ namespace Search
         private int draws;
         private int[] gamesWon;
 
-        List<Strategy> strategies = new List<Strategy>();
+        List<Strategy<AbstractGame<Game,int>, int>> strategies = new List<Strategy<AbstractGame<Game, int>, int>>();
 
         public Controller()
         {
@@ -26,13 +26,15 @@ namespace Search
         }
 
 
-        private Strategy GetStrategyType(string strategy, int seed)
+        private Strategy<AbstractGame<Game, int>, int> GetStrategyType(string strategy, int seed)
         {
             string[] type_param = strategy.Split(':');
             string name = type_param[0];
 
             switch (name)
             {
+                case "basic":
+                    return new BasicStrategy(seed);
                 case "perfect":
                     return new PerfectStrategy();
                 case "mcts":
@@ -51,7 +53,7 @@ namespace Search
             }
         }
 
-        private void HandleEndGameResults(Trivial game, string[] strategies, int gameIndex)
+        private void HandleEndGameResults(AbstractGame<Game, int> game, string[] strategies, int gameIndex)
         {
             Console.Write("Game " + gameIndex + ": ");
 
@@ -92,8 +94,10 @@ namespace Search
             Console.WriteLine("==== RUNNING ====\n");
             for (int i = 1; i <= parameters.TotalGames; i++)
             {
-                Trivial game = new Trivial();
-                //TicTacToe game = new TicTacToe();
+                var game = parameters.Game == "tictactoe" ? new TicTacToe() : 
+                    (AbstractGame<Game, int>) new Trivial();
+
+
                 InitializeStrategies(parameters);
 
                 while (!game.IsDone())
@@ -120,9 +124,10 @@ namespace Search
 
             var parameters = new GameParameters()
             {
-                TotalGames = int.Parse(args[5]),
-                Seed = int.Parse(args[3]),
-                Strategies = new string[2] { args[0], args[1] }
+                Game = args[0],
+                TotalGames = int.Parse(args[6]),
+                Seed = int.Parse(args[4]),
+                Strategies = new string[2] { args[1], args[2] }
             };
 
             return parameters;

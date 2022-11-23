@@ -1,10 +1,10 @@
 ﻿using System;
-using Game;
+using Games;
 using PolicyEvaluation;
 
 namespace Strategies
 {
-    interface Strategy<S, A>
+    public interface Strategy<S, A>
     {
         A Action(S state);
     }
@@ -14,12 +14,12 @@ namespace Strategies
         int visitCount;
         int winScore;
         int lastAction = -1;    // last action (best move chosen to return)
-        Trivial? game;
+        AbstractGame<Game, int>? game;
         Node? parent;
         List<Node> childArray = new List<Node>();
         List<int>? allActions;
         public Node() { }
-        public Node(Trivial game, Node parent, int action)
+        public Node(AbstractGame<Game, int> game, Node parent, int action)
         {
             this.game = game;
             this.parent = parent;
@@ -51,7 +51,7 @@ namespace Strategies
             winScore += ws;
         }
 
-        public void SetGameState(Trivial g)
+        public void SetGameState(AbstractGame<Game, int> g)
         {
             game = g;
         }
@@ -61,7 +61,7 @@ namespace Strategies
             return parent!;
         }
 
-        public Trivial GetGame()
+        public AbstractGame<Game, int> GetGame()
         {
             return game!;
         }
@@ -109,7 +109,7 @@ namespace Strategies
             int action = GetAllActions().First();
             GetAllActions().RemoveAt(0);
 
-            Trivial state = game!.Result(action);
+            AbstractGame<Game, int> state = (AbstractGame<Game, int>)game!.Result(action);
 
             Node newNode = new Node(state, this, action);
             childArray.Add(newNode);
@@ -148,7 +148,7 @@ namespace Strategies
         }
     }
 
-    class MCTS : Strategy
+    class MCTS : Strategy<AbstractGame<Game, int>, int>
     {
         int limit;
         Random random;
@@ -178,7 +178,7 @@ namespace Strategies
 
         private Node TreePolicy(Node node)
         {
-            Trivial gameState = node.GetGame();
+            AbstractGame<Game,int> gameState = node.GetGame();
 
             if (node.GetAllActions() is null)
             {
@@ -195,7 +195,7 @@ namespace Strategies
             }
         }
 
-        private int DefaultPolicy(Trivial gameStateClone)
+        private int DefaultPolicy(AbstractGame<Game,int> gameStateClone)
         {
             while (!gameStateClone.IsDone())
             {
@@ -206,7 +206,7 @@ namespace Strategies
             return gameStateClone.Winner();
         }
 
-        public int Action(Trivial state)
+        public int Action(AbstractGame<Game, int> state)
         {
             Tree tree = new Tree();
             Node rootNode = tree.GetRoot();
@@ -217,7 +217,7 @@ namespace Strategies
             while (curr <= limit)
             {
                 Node selectedNode = TreePolicy(rootNode);
-                int playoutResult = DefaultPolicy(selectedNode.GetGame().Clone());
+                int playoutResult = DefaultPolicy((AbstractGame<Game, int>)selectedNode.GetGame().Clone());
                 Backpropogation(selectedNode, playoutResult);
 
                 curr++;

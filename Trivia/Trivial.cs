@@ -5,17 +5,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Game
+namespace Games
 {
-    public class PerfectStrategy : Strategy<Trivial, int>
+    public class PerfectStrategy : Strategy<AbstractGame<Game, int>, int>
     {
-        public int Action(Trivial state)
+        public int Action(AbstractGame<Game, int> state)
         {
             return 3;
         }
     }
 
-    public class Trivial : AbstractGame<Trivial, int>
+    public class Trivial : Game, AbstractGame<Trivial, int>
     {
         int p1Move, p2Move;
 

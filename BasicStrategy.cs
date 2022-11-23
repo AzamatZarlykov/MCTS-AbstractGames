@@ -1,9 +1,9 @@
 ﻿using System;
-using Game;
+using Games;
 
 namespace Strategies
 {
-    public class BasicStrategy : Strategy<TicTacToe, int>
+    public class BasicStrategy : Strategy<AbstractGame<Game, int>, int>
     {
         private Random random;
         public BasicStrategy(int seed)
@@ -11,9 +11,9 @@ namespace Strategies
             this.random = new Random(seed);
         }
 
-        public int Action(TicTacToe s)
+        public int Action(AbstractGame<Game, int> s)
         {
-            TicTacToe t = s.Clone();
+            TicTacToe t = (TicTacToe)s.Clone();
 
             for (int check = 0; check < 2; ++check)
             {

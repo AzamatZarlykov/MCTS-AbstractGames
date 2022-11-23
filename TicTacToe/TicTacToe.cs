@@ -4,9 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Game
+namespace Games
 {
-    public interface AbstractGame<S, A>
+    public class Game
+    {
+
+    }
+
+    public interface AbstractGame<out S, A> where S : Game, new()
     {
         S Clone();
         A Player();         // which player moves next: 1 (maximizing) or 2 (minimizing)
@@ -14,9 +19,12 @@ namespace Game
         void Move(A action);  // apply action to state
         bool IsDone();     // true if game has finished
         int Outcome();     // 1 = player 1 wins, 0 = draw, -1 = player 2 wins
+        int Winner();   // returns the winner
+        S Result(A action);
+        A RandomAction(Random random);
     }
 
-    public class TicTacToe : AbstractGame<TicTacToe, int>
+    public class TicTacToe : Game, AbstractGame<TicTacToe, int>
     {
         // properties
         public int[][] board = new int[3][];
