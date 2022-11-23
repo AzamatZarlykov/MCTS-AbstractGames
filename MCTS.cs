@@ -4,9 +4,9 @@ using PolicyEvaluation;
 
 namespace Strategies
 {
-    interface Strategy
+    interface Strategy<S, A>
     {
-        int Action(TicTacToe state);
+        A Action(S state);
     }
 
     public class Node
@@ -14,12 +14,12 @@ namespace Strategies
         int visitCount;
         int winScore;
         int lastAction = -1;    // last action (best move chosen to return)
-        TicTacToe? game;
+        Trivial? game;
         Node? parent;
         List<Node> childArray = new List<Node>();
         List<int>? allActions;
         public Node() { }
-        public Node(TicTacToe game, Node parent, int action)
+        public Node(Trivial game, Node parent, int action)
         {
             this.game = game;
             this.parent = parent;
@@ -51,7 +51,7 @@ namespace Strategies
             winScore += ws;
         }
 
-        public void SetGameState(TicTacToe g)
+        public void SetGameState(Trivial g)
         {
             game = g;
         }
@@ -61,7 +61,7 @@ namespace Strategies
             return parent!;
         }
 
-        public TicTacToe GetGame()
+        public Trivial GetGame()
         {
             return game!;
         }
@@ -109,7 +109,7 @@ namespace Strategies
             int action = GetAllActions().First();
             GetAllActions().RemoveAt(0);
 
-            TicTacToe state = game!.Result(action);
+            Trivial state = game!.Result(action);
 
             Node newNode = new Node(state, this, action);
             childArray.Add(newNode);
@@ -168,7 +168,7 @@ namespace Strategies
             while (tempNode != null)
             {
                 tempNode.IncrementVisit();
-                if (tempNode.GetGame().turn == playoutResult)
+                if (tempNode.GetGame().Player() == playoutResult)
                 {
                     tempNode.AddScore(WINSCORE);
                 }
@@ -178,7 +178,7 @@ namespace Strategies
 
         private Node TreePolicy(Node node)
         {
-            TicTacToe gameState = node.GetGame();
+            Trivial gameState = node.GetGame();
 
             if (node.GetAllActions() is null)
             {
@@ -195,7 +195,7 @@ namespace Strategies
             }
         }
 
-        private int DefaultPolicy(TicTacToe gameStateClone)
+        private int DefaultPolicy(Trivial gameStateClone)
         {
             while (!gameStateClone.IsDone())
             {
@@ -206,7 +206,7 @@ namespace Strategies
             return gameStateClone.Winner();
         }
 
-        public int Action(TicTacToe state)
+        public int Action(Trivial state)
         {
             Tree tree = new Tree();
             Node rootNode = tree.GetRoot();

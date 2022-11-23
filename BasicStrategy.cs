@@ -3,7 +3,7 @@ using Game;
 
 namespace Strategies
 {
-    public class BasicStrategy : Strategy
+    public class BasicStrategy : Strategy<TicTacToe, int>
     {
         private Random random;
         public BasicStrategy(int seed)
@@ -17,7 +17,7 @@ namespace Strategies
 
             for (int check = 0; check < 2; ++check)
             {
-                int player = check == 0 ? t.turn : 3 - t.turn;
+                int player = check == 0 ? t.Player() : 3 - t.Player();
 
                 for (int x = 0; x < 3; ++x)
                 {

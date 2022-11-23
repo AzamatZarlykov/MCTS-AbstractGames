@@ -6,22 +6,22 @@ using System.Threading.Tasks;
 
 namespace Game
 {
-    public interface AbstractGame
+    public interface AbstractGame<S, A>
     {
-        TicTacToe Clone();
-        int Player();         // which player moves next: 1 (maximizing) or 2 (minimizing)
-        List<int> GetAllActions();    // available moves in this state
-        void Move(int action);  // apply action to state
+        S Clone();
+        A Player();         // which player moves next: 1 (maximizing) or 2 (minimizing)
+        List<A> GetAllActions();    // available moves in this state
+        void Move(A action);  // apply action to state
         bool IsDone();     // true if game has finished
         int Outcome();     // 1 = player 1 wins, 0 = draw, -1 = player 2 wins
     }
 
-    public class TicTacToe : AbstractGame
+    public class TicTacToe : AbstractGame<TicTacToe, int>
     {
         // properties
         public int[][] board = new int[3][];
         int moves = 0;
-        public int turn = 1;
+        int turn = 1;
         int winner = -1;
         int win_x, win_y, win_dx, win_dy;
         // constructors

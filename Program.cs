@@ -7,6 +7,7 @@ namespace Search
 
     public class GameParameters
     {
+        public string? Game { get; set; }
         public int TotalGames { get; set; }
         public int Seed { get; set; }
         public string[] Strategies { get; set; } = new string[2];
@@ -32,8 +33,8 @@ namespace Search
 
             switch (name)
             {
-                case "basic":
-                    return new BasicStrategy(seed);
+                case "perfect":
+                    return new PerfectStrategy();
                 case "mcts":
                     int limit = int.Parse(type_param[1]);
                     return new MCTS(seed, limit);
@@ -50,7 +51,7 @@ namespace Search
             }
         }
 
-        private void HandleEndGameResults(TicTacToe game, string[] strategies, int gameIndex)
+        private void HandleEndGameResults(Trivial game, string[] strategies, int gameIndex)
         {
             Console.Write("Game " + gameIndex + ": ");
 
@@ -91,18 +92,16 @@ namespace Search
             Console.WriteLine("==== RUNNING ====\n");
             for (int i = 1; i <= parameters.TotalGames; i++)
             {
-                TicTacToe game = new TicTacToe();
+                Trivial game = new Trivial();
+                //TicTacToe game = new TicTacToe();
                 InitializeStrategies(parameters);
 
                 while (!game.IsDone())
                 {
-                    int turn = game.turn;
-                    // Console.WriteLine($"Turn: {turn}");
+                    int turn = game.Player();
                     int action = strategies[turn - 1].Action(game);
-                    // Console.WriteLine($"Action: X: {action % 3}; Y: {action / 3}");
                     game.Move(action);
 
-                    // Console.WriteLine(game);
                 }
                 HandleEndGameResults(game, parameters.Strategies, i);
             }
@@ -116,7 +115,9 @@ namespace Search
 
         private static GameParameters ParseParameters(string[] args)
         {
-        // $ ./tictactoe mcts:100 basic -seed 22 -games 100
+            // $ dotnet run trivial mcts:100 basic -seed 22 -games 100
+            // $ dotnet run tictactoe mcts:100 basic -seed 22 -games 100
+
             var parameters = new GameParameters()
             {
                 TotalGames = int.Parse(args[5]),
