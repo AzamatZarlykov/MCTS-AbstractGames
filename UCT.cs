@@ -5,20 +5,21 @@ namespace PolicyEvaluation
 {
     public class UCT
     {
-        public static double uctValue(int parentVisit, double nodeWinScore, int nodeVisit)
+        public static double UctValue(int parentVisit, double nodeWinScore, int nodeVisit, double expParam)
         {
             if (nodeVisit == 0)
             {
                 return int.MaxValue;
             }
-            return ((double)nodeWinScore / (double)nodeVisit)
-                + 1.41 * Math.Sqrt(Math.Log(parentVisit) / (double)nodeVisit);
+            return ((1 - (double)nodeWinScore) / (double)nodeVisit)
+                + expParam * Math.Sqrt(Math.Log(parentVisit) / (double)nodeVisit);
         }
 
-        public static Node findBestNodeWithUCT(Node node)
+        public static Node FindBestNodeWithUCT(Node node, double expParam)
         {
             int parentVisit = node.GetVisitCount();
-            return node.GetChildArray().MaxBy(cNode => uctValue(parentVisit, cNode.GetWinScore(), cNode.GetVisitCount()))!;
+            return node.GetChildArray().MaxBy(cNode => UctValue(parentVisit, cNode.GetWinScore(), 
+                cNode.GetVisitCount(), expParam))!;
         }
     }
 }

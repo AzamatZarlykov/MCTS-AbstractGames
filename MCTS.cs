@@ -17,7 +17,7 @@ namespace Strategies
         TicTacToe? game;
         Node? parent;
         List<Node> childArray = new List<Node>();
-
+        List<int>? allActions;
         public Node() { }
         public Node(TicTacToe game, Node parent, int action)
         {
@@ -26,25 +26,14 @@ namespace Strategies
             this.lastAction = action;
         }
 
-        public Node Clone()
+        public void SetAllActions(List<int> actions)
         {
-            Node clone = (Node)this.MemberwiseClone();
-
-            clone.game = game!.Clone();
-            clone.parent = parent is not null ? parent.Clone() : null;
-            clone.childArray = new List<Node>(childArray);
-
-            return clone;
-        }
-        
-        public Node GetChildWithMaxScore()
-        {
-            return childArray.MaxBy(child => child.winScore)!;
+            allActions = new List<int>(actions);
         }
 
-        public Node GetRandomChildNode(Random random)
+        public List<int> GetAllActions()
         {
-            return childArray[random.Next(childArray.Count)];
+            return allActions!;
         }
 
         public int GetLastAction()
@@ -91,6 +80,48 @@ namespace Strategies
         {
             return childArray;
         }
+
+        public bool IsNotFullyExpanded()
+        {
+            return allActions!.Count > 0 ? true : false;
+        }
+
+        public List<int> GetExpandedActions()
+        {
+            List<int> actions = new List<int>();
+
+            foreach (Node childNode in GetChildArray())
+            {
+                actions.Add(childNode.GetLastAction());
+            }
+
+            return actions;
+        }
+
+        public Node GetChildWithMinScore()
+        {
+            return childArray.MinBy(child => child.winScore)!;
+        }
+
+        public Node Expand()
+        {
+            // Get the untried action
+            int action = GetAllActions().First();
+            GetAllActions().RemoveAt(0);
+
+            TicTacToe state = game!.Result(action);
+
+            Node newNode = new Node(state, this, action);
+            childArray.Add(newNode);
+
+            return newNode;
+        }
+
+        public Node BestChild(double expParam)
+        {
+            return UCT.FindBestNodeWithUCT(this, expParam);
+        }
+
     }
 
     class Tree
@@ -122,56 +153,12 @@ namespace Strategies
         int limit;
         Random random;
 
-        const int WINSCORE = 10;
+        int WINSCORE = 1;
 
         public MCTS(int seed, int limit)
         {
             this.limit = limit;
             this.random = new Random(seed);
-        }
-
-        // Selection: guided by selection policy - UCT
-        private Node SelectPromisingNode(Node root)
-        {
-            Node node = root;
-            while (node.GetChildArray().Count != 0)
-            {
-                node = UCT.findBestNodeWithUCT(node);
-            }
-            return node;
-        }
-
-        // Expansion: grow the search tree by generating new children (possible states)
-        private void ExpandNode(Node promisingNode)
-        {
-            TicTacToe gameState = promisingNode.GetGame();
-
-            List<int> possibleActions = gameState.GetAllActions();
-            List<TicTacToe> possibleStates = gameState.GetAllPossibleStates(possibleActions);
-
-            for(int i = 0; i < possibleActions.Count; i++)
-            {
-                int action = possibleActions[i];
-                TicTacToe state = possibleStates[i];
-
-                Node newNode = new Node(state, promisingNode, action);
-                promisingNode.GetChildArray().Add(newNode);
-            }
-        }
-
-        // Simulation
-        private int SimulateRandomPlayout(Node nodeToExplore)
-        {
-            Node tempNode = nodeToExplore.Clone();
-            TicTacToe gameState = tempNode.GetGame();
-            
-            while(!gameState.IsDone())
-            {
-                
-                int action = gameState.RandomAction(random); 
-                gameState.Move(action);
-            }
-            return gameState.Winner();
         }
 
         // Backpropogation
@@ -189,7 +176,35 @@ namespace Strategies
             }
         }
 
+        private Node TreePolicy(Node node)
+        {
+            TicTacToe gameState = node.GetGame();
 
+            if (node.GetAllActions() is null)
+            {
+                node.SetAllActions(gameState.GetAllActions());
+            }
+
+            if (node.IsNotFullyExpanded())
+            {
+                return node.Expand();
+            }
+            else
+            {
+                return node.BestChild(1.41);
+            }
+        }
+
+        private int DefaultPolicy(TicTacToe gameStateClone)
+        {
+            while (!gameStateClone.IsDone())
+            {
+
+                int action = gameStateClone.RandomAction(random);
+                gameStateClone.Move(action);
+            }
+            return gameStateClone.Winner();
+        }
 
         public int Action(TicTacToe state)
         {
@@ -201,24 +216,13 @@ namespace Strategies
             int curr = 1;
             while (curr <= limit)
             {
-                // Selection
-                Node promisingNode = SelectPromisingNode(rootNode);
-                // Expansion
-                ExpandNode(promisingNode);
-                
-                Node nodeToExplore = promisingNode;
-                if (promisingNode.GetChildArray().Count > 0)
-                {
-                    nodeToExplore = promisingNode.GetRandomChildNode(random);
-                }
-                // Simulation
-                int playoutResult = SimulateRandomPlayout(nodeToExplore);
-                // Backpropogation
-                Backpropogation(nodeToExplore, playoutResult);
-                
+                Node selectedNode = TreePolicy(rootNode);
+                int playoutResult = DefaultPolicy(selectedNode.GetGame().Clone());
+                Backpropogation(selectedNode, playoutResult);
+
                 curr++;
             }
-            Node winnerNode = rootNode.GetChildWithMaxScore();
+            Node winnerNode = rootNode.BestChild(0);
             tree.SetRoot(winnerNode);
             return winnerNode.GetLastAction();
         }

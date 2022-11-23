@@ -21,7 +21,7 @@ namespace Strategies
 
                 for (int x = 0; x < 3; ++x)
                 {
-                    for (int y = 0; y < 2; ++y)
+                    for (int y = 0; y < 3; ++y)
                     {
                         if (t.board[x][y] == 0)
                         {
