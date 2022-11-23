@@ -12,7 +12,7 @@ namespace PolicyEvaluation
                 return int.MaxValue;
             }
             return ((1 - (double)nodeWinScore) / (double)nodeVisit)
-                + expParam * Math.Sqrt(Math.Log(parentVisit) / (double)nodeVisit);
+                + expParam * Math.Sqrt(2 * Math.Log(parentVisit) / (double)nodeVisit);
         }
 
         public static Node FindBestNodeWithUCT(Node node, double expParam)
