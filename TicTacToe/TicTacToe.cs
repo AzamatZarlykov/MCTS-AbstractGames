@@ -6,24 +6,6 @@ using System.Threading.Tasks;
 
 namespace Games
 {
-    public class Game
-    {
-
-    }
-
-    public interface AbstractGame<out S, A> where S : Game, new()
-    {
-        S Clone();
-        A Player();         // which player moves next: 1 (maximizing) or 2 (minimizing)
-        List<A> GetAllActions();    // available moves in this state
-        void Move(A action);  // apply action to state
-        bool IsDone();     // true if game has finished
-        int Outcome();     // 1 = player 1 wins, 0 = draw, -1 = player 2 wins
-        int Winner();   // returns the winner
-        S Result(A action);
-        A RandomAction(Random random);
-    }
-
     public class TicTacToe : Game, AbstractGame<TicTacToe, int>
     {
         // properties
@@ -39,6 +21,11 @@ namespace Games
             {
                 board[i] = new int[3];
             }
+        }
+
+        public TicTacToe InitialState(int seed)
+        {
+            return new TicTacToe();
         }
 
         public TicTacToe Clone()
@@ -58,23 +45,12 @@ namespace Games
             return t;
         }
 
-        public bool IsDone()
-        {
-            return winner != -1;
-        }
-
         public int Player()
         {
             return turn;
         }
 
-        public int Outcome()
-        {
-            if (winner == 0) return 0;
-            return winner == 1 ? 1 : -1;
-        }
-
-        public List<int> GetAllActions()
+        public List<int> Actions()
         {
             List<int> r = new List<int>();
 
@@ -87,16 +63,32 @@ namespace Games
             return r;
         }
 
+        public void Apply(int action)
+        {
+            Move(action % 3, action / 3);
+        }
+
+        public bool IsDone()
+        {
+            return winner != -1;
+        }
+
+        public double Outcome()
+        {
+            if (winner == 0) return 0;
+            return winner == 1 ? 1000.0 : -1000.0;
+        }
+
         public int RandomAction(Random random)
         {
-            List<int> a = GetAllActions();
+            List<int> a = Actions();
             return a[random.Next(a.Count())];
         }
 
         public TicTacToe Result(int action)
         {
             TicTacToe s = Clone();
-            s.Move(action);
+            s.Apply(action);
             return s;
         }
 
@@ -139,11 +131,6 @@ namespace Games
 
             turn = 3 - turn;
             return true;
-        }
-
-        public void Move(int action)
-        {
-            Move(action % 3, action / 3);
         }
 
         public int Winner() { return winner; }

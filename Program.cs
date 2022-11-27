@@ -39,7 +39,7 @@ namespace Search
                     return new PerfectStrategy();
                 case "mcts":
                     int limit = int.Parse(type_param[1]);
-                    return new MCTS(seed, limit);
+                    return new MCTS<int>(seed, limit);
                 default:
                     throw new Exception("unknown strategy");
             }
@@ -94,8 +94,8 @@ namespace Search
             Console.WriteLine("==== RUNNING ====\n");
             for (int i = 1; i <= parameters.TotalGames; i++)
             {
-                var game = parameters.Game == "tictactoe" ? new TicTacToe() : 
-                    (AbstractGame<Game, int>) new Trivial();
+                var game = parameters.Game == "tictactoe" ? (AbstractGame<Game, int>)new TicTacToe() : 
+                    new TrivialGame();
 
 
                 InitializeStrategies(parameters);
@@ -104,7 +104,9 @@ namespace Search
                 {
                     int turn = game.Player();
                     int action = strategies[turn - 1].Action(game);
-                    game.Move(action);
+                    // Console.WriteLine($"Turn: {turn}; Action: {action}");
+                    game.Apply(action);
+                    // Console.WriteLine(game);
 
                 }
                 HandleEndGameResults(game, parameters.Strategies, i);

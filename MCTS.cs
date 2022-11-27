@@ -9,36 +9,40 @@ namespace Strategies
         A Action(S state);
     }
 
-    public class Node
+    public class Node<A>
     {
         int visitCount;
-        int winScore;
-        int lastAction = -1;    // last action (best move chosen to return)
-        AbstractGame<Game, int>? game;
-        Node? parent;
-        List<Node> childArray = new List<Node>();
-        List<int>? allActions;
+        double winScore;
+
+        A? lastAction;    // last action (best move chosen to return)
+
+        AbstractGame<Game, A>? game;
+
+        Node<A>? parent;
+        List<Node<A>> childArray = new List<Node<A>>();
+
+        List<A>? allActions;
         public Node() { }
-        public Node(AbstractGame<Game, int> game, Node parent, int action)
+        public Node(AbstractGame<Game, A> game, Node<A> parent, A action)
         {
             this.game = game;
             this.parent = parent;
             this.lastAction = action;
         }
 
-        public void SetAllActions(List<int> actions)
+        public void SetAllActions(List<A> actions)
         {
-            allActions = new List<int>(actions);
+            allActions = new List<A>(actions);
         }
 
-        public List<int> GetAllActions()
+        public List<A> GetAllActions()
         {
             return allActions!;
         }
 
-        public int GetLastAction()
+        public A GetLastAction()
         {
-            return this.lastAction;
+            return this.lastAction!;
         }
 
         public void IncrementVisit()
@@ -46,22 +50,22 @@ namespace Strategies
             visitCount++;
         }
 
-        public void AddScore(int ws)
+        public void AddScore(double ws)
         {
             winScore += ws;
         }
 
-        public void SetGameState(AbstractGame<Game, int> g)
+        public void SetGameState(AbstractGame<Game, A> g)
         {
             game = g;
         }
 
-        public Node GetParent()
+        public Node<A> GetParent()
         {
             return parent!;
         }
 
-        public AbstractGame<Game, int> GetGame()
+        public AbstractGame<Game, A> GetGame()
         {
             return game!;
         }
@@ -71,26 +75,26 @@ namespace Strategies
             return visitCount;
         }
 
-        public int GetWinScore()
+        public double GetWinScore()
         {
             return winScore;
         }
 
-        public List<Node> GetChildArray()
+        public List<Node<A>> GetChildArray()
         {
             return childArray;
         }
 
         public bool IsNotFullyExpanded()
         {
-            return allActions!.Count > 0 ? true : false;
+            return allActions!.Count > 0;
         }
 
-        public List<int> GetExpandedActions()
+        public List<A> GetExpandedActions()
         {
-            List<int> actions = new List<int>();
+            List<A> actions = new List<A>();
 
-            foreach (Node childNode in GetChildArray())
+            foreach (Node<A> childNode in GetChildArray())
             {
                 actions.Add(childNode.GetLastAction());
             }
@@ -98,57 +102,63 @@ namespace Strategies
             return actions;
         }
 
-        public Node GetChildWithMinScore()
+        public Node<A> GetChildWithMinScore()
         {
             return childArray.MinBy(child => child.winScore)!;
         }
 
-        public Node Expand()
+        public Node<A> Expand()
         {
             // Get the untried action
-            int action = GetAllActions().First();
+            A action = GetAllActions().First()!;
             GetAllActions().RemoveAt(0);
 
-            AbstractGame<Game, int> state = (AbstractGame<Game, int>)game!.Result(action);
+            AbstractGame<Game, A> state = (AbstractGame<Game, A>)game!.Result(action);
 
-            Node newNode = new Node(state, this, action);
+            Node<A> newNode = new Node<A>(state, this, action);
             childArray.Add(newNode);
 
             return newNode;
         }
 
-        public Node BestChild(double expParam)
+        public Node<A> BestChild(double expParam)
         {
-            return UCT.FindBestNodeWithUCT(this, expParam);
+            return UCT<A>.FindBestNodeWithUCT(this, expParam);
+        }
+
+        public bool TerminalState()
+        {
+            // in the terminal state when game is done
+            return game!.IsDone();
         }
 
     }
 
-    class Tree
+    class Tree<A>
     {
-        Node root;
+        Node<A> root;
         public Tree() 
         { 
-            root = new Node();
+            root = new Node<A>();
         }
 
-        public Tree(Node root)
+        public Tree(Node<A> root)
         {
             this.root = root;
         }
 
-        public Node GetRoot()
+        public Node<A> GetRoot()
         {
             return root!;
         }
 
-        public void SetRoot(Node node)
+        public void SetRoot(Node<A> node)
         {
             this.root = node;
         }
     }
 
-    class MCTS : Strategy<AbstractGame<Game, int>, int>
+    class MCTS<A> : Strategy<AbstractGame<Game, A>, A>
     {
         int limit;
         Random random;
@@ -161,14 +171,61 @@ namespace Strategies
             this.random = new Random(seed);
         }
 
-        // Backpropogation
-        private void Backpropogation(Node nodeToExplore, int playoutResult)
+        private void AssignActions(Node<A> node, AbstractGame<Game, A> gameState)
         {
-            Node tempNode = nodeToExplore;
+            if (node.GetAllActions() is null)
+            {
+                node.SetAllActions(gameState!.Actions());
+            }
+        }
+
+        private Node<A> TreePolicy(Node<A> node)
+        {
+            AbstractGame<Game, A> gameState = node.GetGame();
+
+            AssignActions(node, gameState);
+            // while node is nonterminal 
+            while (!node.TerminalState())
+            {
+                if (node.IsNotFullyExpanded())
+                {
+                    return node.Expand();
+                }
+                else
+                {
+                    node = node.BestChild(1.41);
+                    AssignActions(node, gameState);
+                }
+            }
+            return node;
+        }
+
+        private int DefaultPolicy(AbstractGame<Game, A> gameStateClone)
+        {
+            while (!gameStateClone.IsDone())
+            {
+                int action = gameStateClone.RandomAction(random);
+                // gameStateClone.Apply(gameStateClone, action);
+                gameStateClone.Apply((A)(object)action);
+            }
+            return gameStateClone.Winner();
+        }
+
+        // Backpropagation
+        private void Backpropagation(Node<A> nodeToExplore, int playoutResult)
+        {
+            Node<A> tempNode = nodeToExplore;
+
             while (tempNode != null)
             {
+                var game = tempNode.GetGame();
                 tempNode.IncrementVisit();
-                if (tempNode.GetGame().Player() == playoutResult)
+                // draw
+                if (playoutResult == 0)
+                {
+                    tempNode.AddScore(0.5);
+                }
+                else if (game.Player() == playoutResult)
                 {
                     tempNode.AddScore(WINSCORE);
                 }
@@ -176,53 +233,36 @@ namespace Strategies
             }
         }
 
-        private Node TreePolicy(Node node)
+        public A Action(AbstractGame<Game, A> state)
         {
-            AbstractGame<Game,int> gameState = node.GetGame();
-
-            if (node.GetAllActions() is null)
-            {
-                node.SetAllActions(gameState.GetAllActions());
-            }
-
-            if (node.IsNotFullyExpanded())
-            {
-                return node.Expand();
-            }
-            else
-            {
-                return node.BestChild(1.41);
-            }
-        }
-
-        private int DefaultPolicy(AbstractGame<Game,int> gameStateClone)
-        {
-            while (!gameStateClone.IsDone())
-            {
-
-                int action = gameStateClone.RandomAction(random);
-                gameStateClone.Move(action);
-            }
-            return gameStateClone.Winner();
-        }
-
-        public int Action(AbstractGame<Game, int> state)
-        {
-            Tree tree = new Tree();
-            Node rootNode = tree.GetRoot();
+            Tree<A> tree = new Tree<A>();
+            Node<A> rootNode = tree.GetRoot();
 
             rootNode.SetGameState(state);
 
             int curr = 1;
             while (curr <= limit)
             {
-                Node selectedNode = TreePolicy(rootNode);
-                int playoutResult = DefaultPolicy((AbstractGame<Game, int>)selectedNode.GetGame().Clone());
-                Backpropogation(selectedNode, playoutResult);
+                Node<A> selectedNode = TreePolicy(rootNode);
+                var game = selectedNode.GetGame();
+                int playoutResult = DefaultPolicy((AbstractGame<Game, A>)game.Clone());
+                Backpropagation(selectedNode, playoutResult);
 
                 curr++;
+
             }
-            Node winnerNode = rootNode.BestChild(0);
+
+/*            foreach (Node<A> n in rootNode.GetChildArray())
+            {
+                double v = UCT<A>.UctValue(rootNode.GetVisitCount(), n.GetWinScore(),
+                                                 n.GetVisitCount(), 0);
+
+                Console.WriteLine($"action = {n.GetLastAction()}, " +
+                                  $"{n.GetVisitCount()} visits, score = {n.GetWinScore()}; " +
+                                  $"UCT = {v:f2}");
+            }*/
+
+            Node<A> winnerNode = rootNode.BestChild(0);
             tree.SetRoot(winnerNode);
             return winnerNode.GetLastAction();
         }

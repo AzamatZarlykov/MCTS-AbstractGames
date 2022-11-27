@@ -15,79 +15,91 @@ namespace Games
         }
     }
 
-    public class Trivial : Game, AbstractGame<Trivial, int>
+    public class TrivialGame : Game, AbstractGame<TrivialGame, int> 
     {
-        int p1Move, p2Move;
+        int p1move, p2move;
+        int turn = 1;
+        public TrivialGame() { }
 
-        public Trivial() { }
-
-        public Trivial(int p1Move, int p2Move)
+        public TrivialGame(int p1move, int p2move)
         {
-            this.p1Move = p1Move;
-            this.p2Move = p2Move;
+            this.p1move = p1move;
+            this.p2move = p2move;
         }
 
-        public Trivial Clone()
+        public TrivialGame(int p1move, int p2move, int turn)
         {
-            return (Trivial)(this).MemberwiseClone();
+            this.p1move = p1move;
+            this.p2move = p2move;
+            this.turn = turn;
         }
 
-        public List<int> GetAllActions()
+        public TrivialGame InitialState(int seed)
         {
-            if (p1Move == 0 || p2Move == 0)
+            return new TrivialGame(0, 0);
+        }
+
+        public TrivialGame Clone()
+        {
+            return new TrivialGame(p1move, p2move, turn);
+        }
+
+        public int Player()
+        {
+            return turn;
+        }
+
+        public List<int> Actions()
+        {
+            if (p1move == 0 || p2move == 0)
             {
                 return new List<int>() { 1,2,3 };
             }
             return new List<int>();
         }
 
-        public int RandomAction(Random random)
+        public void Apply(int action)
         {
-            List<int> a = GetAllActions();
-            return a[random.Next(a.Count())];
-        }
+            if (action < 1 || action > 3)
+                throw new Exception("illegal move");
 
-        public Trivial Result(int action)
-        {
-            Trivial s = Clone();
-            s.Move(action);
-            return s;
-        }
+            turn = 3 - turn;
 
-        public int Winner()
-        {
-            if (p1Move == p2Move) return 0;
-            return p1Move > p2Move ? 1 : 2;
+            if (p1move == 0)
+                p1move = action;
+            else if (p2move == 0)
+                p2move = action;
+            else throw new Exception("game is over");
         }
 
         public bool IsDone()
         {
-            return p1Move != 0 && p2Move != 0;
+            return p1move != 0 && p2move != 0;
         }
 
-        public void Move(int action)
+        public double Outcome()
         {
-            if (action < 1 || action > 3)
-                throw new Exception("illegal move");
-            if (p1Move == 0)
-                p1Move = action;
-            else if (p2Move == 0)
-                p2Move = action;
-            else throw new Exception("game is over");
+            if (p1move == p2move) return 0;
+            return p1move > p2move ? 1000.0 : -1000.0;
         }
 
-        public int Outcome()
+        public int RandomAction(Random random)
         {
-            if (p1Move > p2Move)
-                return 1000;
-            if (p1Move < p2Move)
-                return -1000;
-            return 0;
+            List<int> a = Actions();
+            return a[random.Next(a.Count())];
         }
 
-        public int Player()
+        public TrivialGame Result(int action)
         {
-            return p1Move == 0 ? 1 : 2;
+            TrivialGame state = Clone();
+            state.Apply(action);
+            return state;
+        }
+
+        public int Winner()
+        {
+            if (p1move == p2move) return 0;
+            return p1move > p2move ? 1 : 2;
         }
     }
 }
