@@ -31,15 +31,17 @@ namespace Search
             string[] type_param = strategy.Split(':');
             string name = type_param[0];
 
+            Random random = new Random(seed);
+
             switch (name)
             {
                 case "basic":
-                    return new BasicStrategy(seed);
+                    return new BasicStrategy(random);
                 case "perfect":
                     return new PerfectStrategy();
                 case "mcts":
                     int limit = int.Parse(type_param[1]);
-                    return new MCTS<int>(seed, limit);
+                    return new MCTS<int>(random, limit);
                 default:
                     throw new Exception("unknown strategy");
             }

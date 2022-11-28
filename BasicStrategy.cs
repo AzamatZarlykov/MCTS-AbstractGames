@@ -6,9 +6,9 @@ namespace Strategies
     public class BasicStrategy : Strategy<AbstractGame<Game, int>, int>
     {
         private Random random;
-        public BasicStrategy(int seed)
+        public BasicStrategy(Random r)
         {
-            this.random = new Random(seed);
+            this.random = r;
         }
 
         public int Action(AbstractGame<Game, int> s)

@@ -165,10 +165,10 @@ namespace Strategies
 
         int WINSCORE = 1;
 
-        public MCTS(int seed, int limit)
+        public MCTS(Random r, int limit)
         {
             this.limit = limit;
-            this.random = new Random(seed);
+            this.random = r;
         }
 
         private void AssignActions(Node<A> node, AbstractGame<Game, A> gameState)
@@ -200,13 +200,26 @@ namespace Strategies
             return node;
         }
 
+        private Strategy<AbstractGame<Game, A>,A> GetPlayoutStrategy(AbstractGame<Game, A> gameStateClone)
+        {
+            if (gameStateClone is TicTacToe)
+            {
+                return (Strategy<AbstractGame<Game, A>, A>)new BasicStrategy(random);
+            }
+            else
+            {
+                return (Strategy<AbstractGame<Game, A>, A>)new PerfectStrategy();
+            }
+        }
+
         private int DefaultPolicy(AbstractGame<Game, A> gameStateClone)
         {
+            Strategy<AbstractGame<Game, A>, A> strat = GetPlayoutStrategy(gameStateClone);
+
             while (!gameStateClone.IsDone())
             {
-                int action = gameStateClone.RandomAction(random);
-                // gameStateClone.Apply(gameStateClone, action);
-                gameStateClone.Apply((A)(object)action);
+                A action = strat.Action(gameStateClone);
+                gameStateClone.Apply(action);
             }
             return gameStateClone.Winner();
         }
@@ -251,16 +264,6 @@ namespace Strategies
                 curr++;
 
             }
-
-/*            foreach (Node<A> n in rootNode.GetChildArray())
-            {
-                double v = UCT<A>.UctValue(rootNode.GetVisitCount(), n.GetWinScore(),
-                                                 n.GetVisitCount(), 0);
-
-                Console.WriteLine($"action = {n.GetLastAction()}, " +
-                                  $"{n.GetVisitCount()} visits, score = {n.GetWinScore()}; " +
-                                  $"UCT = {v:f2}");
-            }*/
 
             Node<A> winnerNode = rootNode.BestChild(0);
             tree.SetRoot(winnerNode);
