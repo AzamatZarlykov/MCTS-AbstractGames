@@ -262,7 +262,6 @@ namespace Strategies
                 Backpropagation(selectedNode, playoutResult);
 
                 curr++;
-
             }
 
             Node<A> winnerNode = rootNode.BestChild(0);
