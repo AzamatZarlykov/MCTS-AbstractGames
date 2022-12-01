@@ -25,10 +25,10 @@ namespace Search
             gamesWon = new int[2];
         }
 
-
-        private Strategy<AbstractGame<Game, int>, int> GetStrategyType(string strategy, int seed)
+        private Strategy<AbstractGame<Game, int>, int> GetStrategyType(string strategyName, int seed,
+            AbstractGame<Game, int> game)
         {
-            string[] type_param = strategy.Split(':');
+            string[] type_param = strategyName.Split(':');
             string name = type_param[0];
 
             Random random = new Random(seed);
@@ -41,17 +41,22 @@ namespace Search
                     return new PerfectStrategy();
                 case "mcts":
                     int limit = int.Parse(type_param[1]);
-                    return new MCTS<int>(random, limit);
+
+                    var strategy = game is TicTacToe ? 
+                        (Strategy<AbstractGame<Game, int>, int>)new BasicStrategy(random) :
+                        new PerfectStrategy();
+
+                    return new MCTS<int>(random, limit, strategy);
                 default:
                     throw new Exception("unknown strategy");
             }
         }
 
-        private void InitializeStrategies(GameParameters parameters)
+        private void InitializeStrategies(GameParameters parameters, AbstractGame<Game, int> game)
         {
             foreach (string strategy in parameters.Strategies)
             {
-                strategies.Add(GetStrategyType(strategy, parameters.Seed));
+                strategies.Add(GetStrategyType(strategy, parameters.Seed, game));
             }
         }
 
@@ -100,7 +105,7 @@ namespace Search
                     new TrivialGame();
 
 
-                InitializeStrategies(parameters);
+                InitializeStrategies(parameters, game);
 
                 while (!game.IsDone())
                 {

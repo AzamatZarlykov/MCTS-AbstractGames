@@ -162,13 +162,15 @@ namespace Strategies
     {
         int limit;
         Random random;
-
         int WINSCORE = 1;
 
-        public MCTS(Random r, int limit)
+        private Strategy<AbstractGame<Game, A>, A> strategy;
+
+        public MCTS(Random r, int limit, Strategy<AbstractGame<Game, A>, A> strat)
         {
             this.limit = limit;
             this.random = r;
+            this.strategy = strat;
         }
 
         private void AssignActions(Node<A> node, AbstractGame<Game, A> gameState)
@@ -200,25 +202,11 @@ namespace Strategies
             return node;
         }
 
-        private Strategy<AbstractGame<Game, A>,A> GetPlayoutStrategy(AbstractGame<Game, A> gameStateClone)
-        {
-            if (gameStateClone is TicTacToe)
-            {
-                return (Strategy<AbstractGame<Game, A>, A>)new BasicStrategy(random);
-            }
-            else
-            {
-                return (Strategy<AbstractGame<Game, A>, A>)new PerfectStrategy();
-            }
-        }
-
         private int DefaultPolicy(AbstractGame<Game, A> gameStateClone)
         {
-            Strategy<AbstractGame<Game, A>, A> strat = GetPlayoutStrategy(gameStateClone);
-
             while (!gameStateClone.IsDone())
             {
-                A action = strat.Action(gameStateClone);
+                A action = strategy.Action(gameStateClone);
                 gameStateClone.Apply(action);
             }
             return gameStateClone.Winner();
