@@ -12,7 +12,7 @@ namespace Games
         S Clone();
         int Player(); // which player moves next: 1 (maximizing) or 2 (minimizing)
         List<A> Actions(); // available moves in this state
-        void Apply(A action); // apply action to state
+        void Apply(A action); // apply action to state  
         bool IsDone(); // true if game has finished
         double Outcome(); // 1000.0 = player 1 wins, 0.0 = draw, -1000.0 = player 2 wins
         int RandomAction(Random random); // returns random action

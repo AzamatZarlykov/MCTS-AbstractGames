@@ -189,6 +189,7 @@ namespace Strategies
             // while node is nonterminal 
             while (!node.TerminalState())
             {
+
                 if (node.IsNotFullyExpanded())
                 {
                     return node.Expand();
@@ -196,6 +197,8 @@ namespace Strategies
                 else
                 {
                     node = node.BestChild(1.41);
+
+                    gameState = node.GetGame();
                     AssignActions(node, gameState);
                 }
             }
