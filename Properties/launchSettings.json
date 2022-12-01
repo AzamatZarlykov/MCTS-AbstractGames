@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "MCTS-TicTacToe": {
-      "commandName": "Project",
-      "commandLineArgs": "trivial mcts:3 perfect -seed 1 -games 1"
-    }
-  }
-}
