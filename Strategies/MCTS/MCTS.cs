@@ -161,15 +161,13 @@ namespace Strategies
     class MCTS<A> : Strategy<AbstractGame<Game, A>, A>
     {
         int limit;
-        Random random;
         int WINSCORE = 1;
 
         private Strategy<AbstractGame<Game, A>, A> strategy;
 
-        public MCTS(Random r, int limit, Strategy<AbstractGame<Game, A>, A> strat)
+        public MCTS(int limit, Strategy<AbstractGame<Game, A>, A> strat)
         {
             this.limit = limit;
-            this.random = r;
             this.strategy = strat;
         }
 

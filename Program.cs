@@ -46,7 +46,7 @@ namespace Search
                         (Strategy<AbstractGame<Game, int>, int>)new BasicStrategy(random) :
                         new PerfectStrategy();
 
-                    return new MCTS<int>(random, limit, strategy);
+                    return new MCTS<int>(limit, strategy);
                 default:
                     throw new Exception("unknown strategy");
             }
