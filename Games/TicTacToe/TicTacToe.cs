@@ -65,7 +65,9 @@ namespace Games
 
         public void Apply(int action)
         {
-            Move(action % 3, action / 3);
+            if (!Move(action % 3, action / 3)) {
+                throw new Exception("Illegal Move");
+            }
         }
 
         public bool IsDone()

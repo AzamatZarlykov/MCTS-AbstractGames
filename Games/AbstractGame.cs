@@ -14,8 +14,7 @@ namespace Games
         List<A> Actions(); // available moves in this state
         void Apply(A action); // apply action to state  
         bool IsDone(); // true if game has finished
-        double Outcome(); // 1000.0 = player 1 wins, 0.0 = draw, -1000.0 = player 2 wins
-        int RandomAction(Random random); // returns random action
+        A RandomAction(Random random); // returns random action
         S Result(A action); // create the copy of the state and makes the move
         int Winner();    // 1 = player 1 wins; 2 = player 2 wins; 0 = draw
     }
